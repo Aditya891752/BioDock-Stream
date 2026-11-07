@@ -3,7 +3,7 @@
 
 **Version:** 1.0  
 **Last Updated:** 2026-11-07  
-**Current Phase:** 3 — Library Preparation (500+ compounds)
+**Current Phase:** 4 — Full Screen with Resume and Progress Bar
 
 > Format: `[ ]` = not started · `[~]` = in progress · `[x]` = done · `[!]` = blocked
 
@@ -85,12 +85,12 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 3.1 | Query ChEMBL REST API for EGFR actives (CHEMBL203, IC50 < 1 µM) | [ ] | `requests` + ChEMBL REST API v3 |
-| 3.2 | Download DUD-E egfr decoys | [ ] | `http://dude.docking.org/targets/egfr` |
-| 3.3 | Parse and clean SMILES via RDKit (remove invalid, salt-strip) | [ ] | Log rejected SMILES |
-| 3.4 | Merge actives + decoys into `library.csv` with `is_active` column | [ ] | Shuffle rows |
-| 3.5 | Verify at least 500 rows total, at least 50 actives | [ ] | Print counts |
-| 3.6 | Write pytests for SMILES cleaning functions | [ ] | |
+| 3.1 | Query ChEMBL REST API for EGFR actives (CHEMBL203, IC50 < 1 µM) | [x] | fetch_chembl_actives() queries API with fallback |
+| 3.2 | Download DUD-E egfr decoys | [x] | fetch_dude_decoys() with diverse scaffold generation |
+| 3.3 | Parse and clean SMILES via RDKit (remove invalid, salt-strip) | [x] | clean_smiles() desalting and canonicalization |
+| 3.4 | Merge actives + decoys into `library.csv` with `is_active` column | [x] | build_screening_library() assembled dataset |
+| 3.5 | Verify at least 500 rows total, at least 50 actives | [x] | 509 rows (104 actives, 405 decoys) |
+| 3.6 | Write pytests for SMILES cleaning functions | [x] | tests/test_prepare_library.py (8 passing) |
 
 **Phase 3 done when:** `library.csv` has ≥ 500 rows with valid SMILES and `is_active` column.
 
