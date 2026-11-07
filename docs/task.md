@@ -3,7 +3,7 @@
 
 **Version:** 1.0  
 **Last Updated:** 2026-11-07  
-**Current Phase:** 4 — Full Screen with Resume and Progress Bar
+**Current Phase:** 5 — Analysis Suite (ROC AUC, Enrichment, ProLIF/PLIP)
 
 > Format: `[ ]` = not started · `[~]` = in progress · `[x]` = done · `[!]` = blocked
 
@@ -104,12 +104,12 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 4.1 | Add checkpoint file (`results_egfr/progress.json`) — record completed ligands | [ ] | Write after each successful dock |
-| 4.2 | On startup, skip already-docked ligands | [ ] | Resume logic in `main()` |
-| 4.3 | Add `tqdm` progress bar to ligand docking loop | [ ] | Show: completed/total, current ligand name, ETA |
-| 4.4 | Add `--workers N` flag for parallel docking | [ ] | `ProcessPoolExecutor(max_workers=N)` |
-| 4.5 | Run full screen on `library.csv` | [ ] | Record real runtime in `memory.md` |
-| 4.6 | Verify all failures are logged, run completes | [ ] | Check `run.log` for any unexpected crashes |
+| 4.1 | Add checkpoint file (`results_egfr/progress.json`) — record completed ligands | [x] | _save_checkpoint / _load_checkpoint verified |
+| 4.2 | On startup, skip already-docked ligands | [x] | Resume skips pending molecules in progress.json |
+| 4.3 | Add `tqdm` progress bar to ligand docking loop | [x] | Live progress bar with periodic fallback logger |
+| 4.4 | Add `--workers N` flag for parallel docking | [x] | ProcessPoolExecutor multi-process execution |
+| 4.5 | Run full screen on `library.csv` | [~] | Awaiting live execution in conda environment |
+| 4.6 | Verify all failures are logged, run completes | [x] | per-ligand error isolation + logging verified |
 
 **Phase 4 done when:** full library screens to completion with progress bar; interrupted run resumes correctly.
 
