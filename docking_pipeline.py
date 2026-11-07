@@ -661,6 +661,97 @@ def dock_ligand(
 
 
 # ===========================================================================
+# WORKER FUNCTION FOR SCREENING (Stages 5, 6, 7 per ligand)
+# ===========================================================================
+
+def process_single_ligand(
+    name: str,
+    smiles: str,
+    receptor_pdbqt_path: Path,
+    clean_pdb_path: Path,
+    box: dict[str, float],
+    seed: int = 42,
+    exhaustiveness: int = 8,
+    n_poses: int = 9,
+    poses_dir: Optional[Path] = None,
+) -> dict:
+    """
+    Execute Stages 5, 6, and 7 on a single ligand in a self-contained manner.
+
+    This function is designed to be executed either serially or in parallel
+    across multiple worker processes via concurrent.futures.ProcessPoolExecutor.
+
+    Parameters
+    ----------
+    name : str
+        Molecule identifier.
+    smiles : str
+        SMILES string.
+    receptor_pdbqt_path : Path
+        Prepared receptor PDBQT.
+    clean_pdb_path : Path
+        Receptor clean PDB (for distance calculations).
+    box : dict
+        Grid box bounds and center.
+    seed : int
+        Deterministic random seed.
+    exhaustiveness : int
+        Vina search exhaustiveness.
+    n_poses : int
+        Number of output poses.
+    poses_dir : Optional[Path]
+        Directory to save the best pose PDBQT file.
+
+    Returns
+    -------
+    dict
+        Completed result record ready for checkpointing and CSV reporting.
+    """
+    res: dict = {"name": name, "smiles": smiles}
+
+    # Stage 5: Ligand preparation
+    lig_pdbqt = smiles_to_pdbqt(name, smiles)
+    if lig_pdbqt is None:
+        res.update({
+            "affinity": None,
+            "pose_pdbqt": None,
+            "hbond_residues": [],
+            "hydrophobic_residues": [],
+            "status": "prep_failed",
+        })
+        return res
+
+    # Stage 6: Docking
+    dock_res = dock_ligand(
+        receptor_pdbqt_path=receptor_pdbqt_path,
+        ligand_pdbqt_str=lig_pdbqt,
+        box=box,
+        seed=seed,
+        exhaustiveness=exhaustiveness,
+        n_poses=n_poses,
+    )
+    res.update(dock_res)
+
+    if dock_res["status"] != "success":
+        res.update({"hbond_residues": [], "hydrophobic_residues": []})
+        return res
+
+    # Save best pose file if directory provided
+    if poses_dir is not None:
+        try:
+            poses_dir.mkdir(parents=True, exist_ok=True)
+            pose_file = poses_dir / f"{name}_best.pdbqt"
+            pose_file.write_text(dock_res["pose_pdbqt"], encoding="utf-8")
+        except Exception as e:
+            logger.debug("[%s] Failed to save pose file: %s", name, e)
+
+    # Stage 7: Interaction detection
+    interactions = extract_interactions_distance(dock_res["pose_pdbqt"], clean_pdb_path)
+    res.update(interactions)
+    return res
+
+
+# ===========================================================================
 # STAGE 7 — Interaction extraction (distance-based)
 # ===========================================================================
 
@@ -985,81 +1076,110 @@ def run_pipeline(args: argparse.Namespace) -> None:
     # ── Per-ligand docking loop (stages 5–7) ───────────────────────────────
 
     results: list[dict] = list(progress.values())
+    pending_rows = [row for row in library_df.itertuples(index=False) if str(row.name) not in progress]
+    logger.info("Molecules to process: %d (already completed: %d)", len(pending_rows), len(progress))
 
-    # Use tqdm progress bar if available; fall back to plain loop
+    poses_dir = output_dir / "poses"
+    poses_dir.mkdir(parents=True, exist_ok=True)
+
+    # Use tqdm progress bar if available; fall back to plain progress
     try:
         from tqdm import tqdm
-        rows = list(library_df.itertuples(index=False))
-        iterator = tqdm(rows, desc="Docking", unit="mol", total=total)
+        has_tqdm = True
     except ImportError:
-        rows = list(library_df.itertuples(index=False))
-        iterator = iter(rows)
-        logger.info("(Install tqdm for a progress bar: pip install tqdm)")
+        has_tqdm = False
+        logger.info("(Install tqdm for a live progress bar: pip install tqdm)")
 
-    for row in iterator:
-        name   = str(row.name)
-        smiles = str(row.smiles)
+    if args.workers > 1 and len(pending_rows) > 0:
+        logger.info("Executing parallel virtual screen across %d worker processes...", args.workers)
+        import concurrent.futures
 
-        if name in progress:
-            continue   # already done in a previous run
+        with concurrent.futures.ProcessPoolExecutor(max_workers=args.workers) as executor:
+            # Map futures to molecule name
+            future_to_mol = {
+                executor.submit(
+                    process_single_ligand,
+                    name=str(row.name),
+                    smiles=str(row.smiles),
+                    receptor_pdbqt_path=receptor_pdbqt,
+                    clean_pdb_path=clean_pdb,
+                    box=box,
+                    seed=args.seed,
+                    exhaustiveness=args.exhaustiveness,
+                    n_poses=args.n_poses,
+                    poses_dir=poses_dir,
+                ): str(row.name)
+                for row in pending_rows
+            }
 
-        result: dict = {"name": name, "smiles": smiles}
+            pbar = tqdm(total=len(pending_rows), desc="Screening", unit="mol") if has_tqdm else None
 
-        # ── Stage 5: Ligand preparation ──────────────────────────────────
-        ligand_pdbqt = smiles_to_pdbqt(name, smiles)
-        if ligand_pdbqt is None:
-            result.update({
-                "affinity": None, "pose_pdbqt": None,
-                "hbond_residues": [], "hydrophobic_residues": [],
-                "status": "prep_failed",
-            })
-            logger.warning("%-32s  prep_failed", name)
+            for future in concurrent.futures.as_completed(future_to_mol):
+                name = future_to_mol[future]
+                try:
+                    result = future.result()
+                except Exception as e:
+                    logger.error("[%s] Worker exception: %s", name, e)
+                    result = {
+                        "name": name,
+                        "smiles": "",
+                        "affinity": None,
+                        "pose_pdbqt": None,
+                        "hbond_residues": [],
+                        "hydrophobic_residues": [],
+                        "status": "docking_failed",
+                    }
+
+                results.append(result)
+                progress[name] = result
+                _save_checkpoint(output_dir, progress)
+
+                if pbar:
+                    pbar.update(1)
+                else:
+                    if len(results) % 25 == 0 or len(results) == total:
+                        logger.info("Progress: %d / %d completed", len(results), total)
+
+            if pbar:
+                pbar.close()
+
+    else:
+        # Serial execution (single worker or debugging)
+        iterator = tqdm(pending_rows, desc="Screening", unit="mol") if has_tqdm else iter(pending_rows)
+
+        for row in iterator:
+            name   = str(row.name)
+            smiles = str(row.smiles)
+
+            result = process_single_ligand(
+                name=name,
+                smiles=smiles,
+                receptor_pdbqt_path=receptor_pdbqt,
+                clean_pdb_path=clean_pdb,
+                box=box,
+                seed=args.seed,
+                exhaustiveness=args.exhaustiveness,
+                n_poses=args.n_poses,
+                poses_dir=poses_dir,
+            )
+
+            status = result.get("status")
+            if status == "success":
+                affinity = result.get("affinity")
+                hbonds = result.get("hbond_residues", [])
+                met793 = any("MET793" in r for r in hbonds)
+                logger.info(
+                    "%-32s  %+6.2f kcal/mol  H-bonds: %-3s  Met793: %s",
+                    name, affinity,
+                    str(len(hbonds)),
+                    "YES" if met793 else "no",
+                )
+            else:
+                logger.warning("%-32s  %s", name, status)
+
             results.append(result)
             progress[name] = result
             _save_checkpoint(output_dir, progress)
-            continue
-
-        # ── Stage 6: Docking ─────────────────────────────────────────────
-        dock_result = dock_ligand(
-            receptor_pdbqt, ligand_pdbqt, box,
-            seed=args.seed,
-            exhaustiveness=args.exhaustiveness,
-            n_poses=args.n_poses,
-        )
-        result.update(dock_result)
-
-        if dock_result["status"] != "success":
-            result.update({"hbond_residues": [], "hydrophobic_residues": []})
-            logger.warning("%-32s  docking_failed", name)
-            results.append(result)
-            progress[name] = result
-            _save_checkpoint(output_dir, progress)
-            continue
-
-        # Save best pose to disk (useful for PyMOL visualisation later)
-        poses_dir = output_dir / "poses"
-        poses_dir.mkdir(exist_ok=True)
-        (poses_dir / f"{name}_best.pdbqt").write_text(dock_result["pose_pdbqt"])
-
-        # ── Stage 7: Interactions ─────────────────────────────────────────
-        interactions = extract_interactions_distance(
-            dock_result["pose_pdbqt"], clean_pdb
-        )
-        result.update(interactions)
-
-        affinity = dock_result["affinity"]
-        hbonds   = interactions["hbond_residues"]
-        met793   = any("MET793" in r for r in hbonds)
-        logger.info(
-            "%-32s  %+6.2f kcal/mol  H-bonds: %-3s  Met793: %s",
-            name, affinity,
-            str(len(hbonds)),
-            "YES" if met793 else "no",
-        )
-
-        results.append(result)
-        progress[name] = result
-        _save_checkpoint(output_dir, progress)
 
     # ── Stage 8: Write results CSV ──────────────────────────────────────────
     output_csv = output_dir / "docking_results.csv"

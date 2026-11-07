@@ -164,6 +164,34 @@ class TestCLIArgumentParsing:
         self._run("--output-dir", str(out), tmp_path=tmp_path)
         assert (out / "run.log").exists()
 
+    def test_workers_flag_parsed(self, tmp_path: Path) -> None:
+        """--workers 4 must be parsed and logged."""
+        r = self._run("--workers", "4", tmp_path=tmp_path)
+        assert "4" in r.stdout
+
+    def test_resume_flag_parsed(self, tmp_path: Path) -> None:
+        """--resume must be logged."""
+        r = self._run("--resume", tmp_path=tmp_path)
+        assert "True" in r.stdout or "resume" in r.stdout.lower()
+
+    def test_checkpoint_save_and_load(self, tmp_path: Path) -> None:
+        """Test _save_checkpoint and _load_checkpoint functions."""
+        sys.path.insert(0, str(REPO_ROOT))
+        from docking_pipeline import _load_checkpoint, _save_checkpoint
+
+        out = tmp_path / "ckpt_test"
+        out.mkdir(parents=True)
+        assert _load_checkpoint(out) == {}
+
+        sample_progress = {
+            "mol_1": {"name": "mol_1", "affinity": -8.4, "status": "success"},
+            "mol_2": {"name": "mol_2", "affinity": None, "status": "prep_failed"},
+        }
+        _save_checkpoint(out, sample_progress)
+        loaded = _load_checkpoint(out)
+        assert loaded == sample_progress
+        assert loaded["mol_1"]["affinity"] == -8.4
+
 
 # ===========================================================================
 # Sanity CSV tests (no scientific deps)
