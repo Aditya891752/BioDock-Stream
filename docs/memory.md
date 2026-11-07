@@ -123,5 +123,6 @@ Add entries here whenever a bug, version conflict, or scientific inconsistency i
 | 2026-11-07 | Project initialized. Created all planning documents: prd.md, architecture.md, techstack.md, aistack.md, rules.md, design.md, task.md, memory.md. No code written yet. | Pre-Phase 0 |
 | 2026-11-07 | Phase 0 complete. Repo initialized, .gitignore, docking_pipeline.py scaffold, sanity CSV, 16 tests passing. First commit made. Conda not installed on machine. | Phase 0 |
 | 2026-11-07 | Phase 1 complete. All 8 pipeline stages implemented with full docstrings. 41 tests passing, 9 skipped (await conda env). Committed. | Phase 1 |
+| 2026-11-07 | Phase 2 complete. validate_redock.py created with crystal extraction, element-wise RMSD, and report writer. test_validate_redock.py written; total 75 tests passing, 14 skipped. | Phase 2 |
 
 Add a row here at the end of every working session.

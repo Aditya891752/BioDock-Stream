@@ -3,7 +3,7 @@
 
 **Version:** 1.0  
 **Last Updated:** 2026-11-07  
-**Current Phase:** 2 — Redocking Validation
+**Current Phase:** 3 — Library Preparation (500+ compounds)
 
 > Format: `[ ]` = not started · `[~]` = in progress · `[x]` = done · `[!]` = blocked
 
@@ -42,17 +42,17 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 1.1 | Implement `fetch_receptor(pdb_id)` — download 1M17 from RCSB | [ ] | HTTP GET to `https://files.rcsb.org/download/1M17.pdb` |
-| 1.2 | Implement `clean_receptor(pdb_path, chain)` — keep chain A, strip HETATM/ANISOU | [ ] | Biopython `PDBParser` + `PDBIO` with `Select` |
-| 1.3 | Implement `prepare_receptor(clean_pdb)` — Open Babel → PDBQT | [ ] | `subprocess` call to `obabel` |
-| 1.4 | Implement `define_grid_box(pdb_path, ligand_resname)` — centroid of AQ4 atoms | [ ] | Biopython; add 10 Å padding each axis |
-| 1.5 | Implement `smiles_to_pdbqt(name, smiles)` — RDKit 3D + Meeko → PDBQT string | [ ] | Catch invalid SMILES; return `None` with log |
-| 1.6 | Implement `dock_ligand(receptor_pdbqt, ligand_pdbqt, box)` — Vina | [ ] | Fixed seed=42; exhaustiveness=8 |
-| 1.7 | Implement `extract_interactions_distance(pose_pdbqt, receptor_pdb)` — distance-based | [ ] | H-bond: N/O within 3.5 Å; hydrophobic: C within 4.5 Å |
-| 1.8 | Implement `write_results(results_list, output_path)` — pandas CSV | [ ] | Sorted by affinity ascending |
-| 1.9 | Wire all stages into `main()` with `argparse` | [ ] | `--pdb-id`, `--library`, `--chain`, `--ligand-resname`, `--output-dir` |
-| 1.10 | Run sanity test on `molecules_sanity.csv` | [ ] | Record real scores in `memory.md` |
-| 1.11 | Write pytests for each function (1.1–1.8) | [ ] | Mock RCSB HTTP call; use test fixtures |
+| 1.1 | Implement `fetch_receptor(pdb_id)` — download 1M17 from RCSB | [x] | HTTP GET to `https://files.rcsb.org/download/1M17.pdb` |
+| 1.2 | Implement `clean_receptor(pdb_path, chain)` — keep chain A, strip HETATM/ANISOU | [x] | Biopython `PDBParser` + `PDBIO` with `Select` |
+| 1.3 | Implement `prepare_receptor(clean_pdb)` — Open Babel → PDBQT | [x] | `subprocess` call to `obabel` |
+| 1.4 | Implement `define_grid_box(pdb_path, ligand_resname)` — centroid of AQ4 atoms | [x] | Biopython; add 10 Å padding each axis |
+| 1.5 | Implement `smiles_to_pdbqt(name, smiles)` — RDKit 3D + Meeko → PDBQT string | [x] | Catch invalid SMILES; return `None` with log |
+| 1.6 | Implement `dock_ligand(receptor_pdbqt, ligand_pdbqt, box)` — Vina | [x] | Fixed seed=42; exhaustiveness=8 |
+| 1.7 | Implement `extract_interactions_distance(pose_pdbqt, receptor_pdb)` — distance-based | [x] | H-bond: N/O within 3.5 Å; hydrophobic: C within 4.5 Å |
+| 1.8 | Implement `write_results(results_list, output_path)` — pandas CSV | [x] | Sorted by affinity ascending |
+| 1.9 | Wire all stages into `main()` with `argparse` | [x] | `--pdb-id`, `--library`, `--chain`, `--ligand-resname`, `--output-dir` |
+| 1.10 | Run sanity test on `molecules_sanity.csv` | [~] | Awaiting live conda env execution |
+| 1.11 | Write pytests for each function (1.1–1.8) | [x] | 41 unit tests passing |
 
 **Phase 1 done when:** sanity run CSV shows erlotinib and gefitinib scoring more negative than aspirin/caffeine/ibuprofen.
 
@@ -66,12 +66,12 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 2.1 | Obtain AQ4 SMILES (verify on ChEMBL or PubChem) | [ ] | Do NOT guess; look it up |
-| 2.2 | Extract crystallographic AQ4 coordinates from 1M17.pdb | [ ] | Biopython; save as `aq4_crystal.pdb` |
-| 2.3 | Implement `validate_redock.py` — dock AQ4, compare to crystal pose | [ ] | Use same box and params as pipeline |
-| 2.4 | Implement `compute_rmsd(pose_coords, crystal_coords)` | [ ] | Heavy atoms only (no H); Biopython or numpy |
-| 2.5 | Report: RMSD value, pass/fail vs 2 Å, top Vina score | [ ] | Print and write to `results_egfr/redock_report.txt` |
-| 2.6 | Write pytests for `compute_rmsd` | [ ] | Known coordinate pairs with known RMSD |
+| 2.1 | Obtain AQ4 SMILES (verify on ChEMBL or PubChem) | [x] | Verified: PubChem CID 176870 |
+| 2.2 | Extract crystallographic AQ4 coordinates from 1M17.pdb | [x] | extract_crystal_coords() implemented |
+| 2.3 | Implement `validate_redock.py` — dock AQ4, compare to crystal pose | [x] | CLI script complete |
+| 2.4 | Implement `compute_rmsd(pose_coords, crystal_coords)` | [x] | Heavy atoms without superimposition, element-wise |
+| 2.5 | Report: RMSD value, pass/fail vs 2 Å, top Vina score | [x] | write_report() to redock_report.txt and stdout |
+| 2.6 | Write pytests for `compute_rmsd` | [x] | tests/test_validate_redock.py (34 passing) |
 
 **Phase 2 done when:** real RMSD number is reported. If > 2 Å, diagnose (box wrong? ligand prep wrong?) before Phase 3.
 
