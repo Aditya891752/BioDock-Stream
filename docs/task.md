@@ -3,7 +3,7 @@
 
 **Version:** 1.0  
 **Last Updated:** 2026-11-07  
-**Current Phase:** 0 — Environment + Repo Scaffold
+**Current Phase:** 2 — Redocking Validation
 
 > Format: `[ ]` = not started · `[~]` = in progress · `[x]` = done · `[!]` = blocked
 

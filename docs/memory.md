@@ -23,9 +23,9 @@
 
 | Field | Value |
 |---|---|
-| Active phase | Phase 0 — Environment + repo scaffold |
-| Phase status | Not started |
-| Blocking issues | None yet |
+| Active phase | Phase 2 — Redocking Validation |
+| Phase status | Phase 1 complete, Phase 2 not started |
+| Blocking issues | Conda not installed — 9 scientific tests are SKIPPED until env is active |
 
 ---
 
@@ -121,5 +121,7 @@ Add entries here whenever a bug, version conflict, or scientific inconsistency i
 | Date | Session Summary | Phase |
 |---|---|---|
 | 2026-11-07 | Project initialized. Created all planning documents: prd.md, architecture.md, techstack.md, aistack.md, rules.md, design.md, task.md, memory.md. No code written yet. | Pre-Phase 0 |
+| 2026-11-07 | Phase 0 complete. Repo initialized, .gitignore, docking_pipeline.py scaffold, sanity CSV, 16 tests passing. First commit made. Conda not installed on machine. | Phase 0 |
+| 2026-11-07 | Phase 1 complete. All 8 pipeline stages implemented with full docstrings. 41 tests passing, 9 skipped (await conda env). Committed. | Phase 1 |
 
 Add a row here at the end of every working session.
