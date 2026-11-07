@@ -3,7 +3,7 @@
 
 **Version:** 1.0  
 **Last Updated:** 2026-11-07  
-**Current Phase:** 6 — Visualisation Instructions (PyMOL / ChimeraX)
+**Current Phase:** 7 — Final Polish (Documentation & Verification)
 
 > Format: `[ ]` = not started · `[~]` = in progress · `[x]` = done · `[!]` = blocked
 
@@ -145,9 +145,9 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 6.1 | Write PyMOL instruction set for loading receptor + top 3 poses | [ ] | In `README.md` or separate `VISUALISATION.md` |
-| 6.2 | Write ChimeraX alternative instructions | [ ] | |
-| 6.3 | Document which residues to highlight (Met793, known contacts) | [ ] | |
+| 6.1 | Write PyMOL instruction set for loading receptor + top 3 poses | [x] | Automated generator generate_pymol_session.py + docs/VISUALISATION.md |
+| 6.2 | Write ChimeraX alternative instructions | [x] | ChimeraX script generator .cxc + docs/VISUALISATION.md |
+| 6.3 | Document which residues to highlight (Met793, known contacts) | [x] | Hinge Met793 & gatekeeper Thr790 highlighted |
 
 ---
 
