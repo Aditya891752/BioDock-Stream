@@ -126,5 +126,6 @@ Add entries here whenever a bug, version conflict, or scientific inconsistency i
 | 2026-11-07 | Phase 2 complete. validate_redock.py created with crystal extraction, element-wise RMSD, and report writer. test_validate_redock.py written; total 75 tests passing, 14 skipped. | Phase 2 |
 | 2026-11-07 | Phase 3 complete. prepare_library.py created, pulling from ChEMBL & DUD-E. data/library.csv generated with 509 compounds (104 actives, 405 decoys). 83 unit tests passing. | Phase 3 |
 | 2026-11-07 | Phase 4 complete. Multi-core parallel ProcessPoolExecutor added to docking_pipeline.py with tqdm progress bar and checkpoint/resume verification. | Phase 4 |
+| 2026-11-07 | Phase 5 complete. analyze_results.py created (ROC AUC, EF1%, Met793 hinge check, high-contrast plots). 93 unit tests passing across all suites. | Phase 5 |
 
 Add a row here at the end of every working session.

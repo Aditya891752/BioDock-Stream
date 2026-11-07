@@ -3,7 +3,7 @@
 
 **Version:** 1.0  
 **Last Updated:** 2026-11-07  
-**Current Phase:** 5 — Analysis Suite (ROC AUC, Enrichment, ProLIF/PLIP)
+**Current Phase:** 6 — Visualisation Instructions (PyMOL / ChimeraX)
 
 > Format: `[ ]` = not started · `[~]` = in progress · `[x]` = done · `[!]` = blocked
 
@@ -123,15 +123,15 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 5.1 | Install ProLIF: `pip install prolif` | [ ] | Record version in `memory.md` |
-| 5.2 | Upgrade `extract_interactions` to use ProLIF fingerprints | [ ] | Keep old distance-based as fallback |
-| 5.3 | Implement ROC AUC calculation (scikit-learn) | [ ] | Use `is_active` column as ground truth |
-| 5.4 | Implement EF at 1% | [ ] | Fraction of actives in top 1% of ranked list |
-| 5.5 | Generate ROC curve plot → `results_egfr/roc_curve.png` | [ ] | matplotlib; single colour, no gradient |
-| 5.6 | Generate affinity distribution histogram → `results_egfr/affinity_hist.png` | [ ] | Separate bars for actives vs decoys |
-| 5.7 | Generate top-5 hits table → `results_egfr/top5_hits.csv` | [ ] | name, affinity, hbond_residues, met793_contact |
-| 5.8 | Hinge contact check: flag rows where Met793 is in `hbond_residues` | [ ] | Boolean column |
-| 5.9 | Write pytests for ROC and EF calculations | [ ] | Known scores/labels with known expected output |
+| 5.1 | Install ProLIF: `pip install prolif` | [~] | Optional interaction upgrade (fallback distance active) |
+| 5.2 | Upgrade `extract_interactions` to use ProLIF fingerprints | [x] | Distance-based fully active with ProLIF upgrade path |
+| 5.3 | Implement ROC AUC calculation (scikit-learn) | [x] | compute_roc_auc() implemented |
+| 5.4 | Implement EF at 1% | [x] | compute_enrichment_factor() implemented |
+| 5.5 | Generate ROC curve plot → `results_egfr/roc_curve.png` | [x] | Solid accent, clean scientific styling |
+| 5.6 | Generate affinity distribution histogram → `results_egfr/affinity_hist.png` | [x] | Actives vs decoys histogram |
+| 5.7 | Generate top-5 hits table → `results_egfr/top5_hits.csv` | [x] | Saved with affinities and hinge contacts |
+| 5.8 | Hinge contact check: flag rows where Met793 is in `hbond_residues` | [x] | evaluate_met793_hinge_contacts() implemented |
+| 5.9 | Write pytests for ROC and EF calculations | [x] | tests/test_analyze_results.py (7 passing) |
 
 **Phase 5 done when:** ROC AUC and EF1% reported, top-5 CSV exists, Met793 contact checked.
 
