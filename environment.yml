@@ -1,0 +1,29 @@
+name: docking
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  # Scientific core — installed via conda-forge for compiled binary support
+  - rdkit          # SMILES parsing, 3D conformer generation
+  - openbabel      # PDB → PDBQT receptor conversion
+  # Everything else via pip
+  - pip
+  - pip:
+    - vina          # AutoDock Vina Python bindings
+    - meeko         # SMILES → PDBQT ligand preparation
+    - biopython     # PDB file parsing, RMSD calculation
+    - pandas        # Results CSV, library manipulation
+    - numpy         # Coordinate math, distance calculations
+    - matplotlib    # Affinity plots, ROC curves
+    - scikit-learn  # ROC AUC, enrichment factor
+    - pytest        # Unit and integration tests
+    - pytest-cov    # Coverage reporting
+    - tqdm          # Progress bars for long runs (Phase 4)
+    # Dev tools
+    - black         # Code formatter
+    - ruff          # Linter
+    - mypy          # Type checking
+    # Phase 5 — add when ready:
+    # - prolif      # Protein-ligand interaction fingerprints
+    # - plip        # H-bond, hydrophobic, salt bridge detection

@@ -1,0 +1,27 @@
+# Core scientific dependencies
+# Pin exact versions here after first successful run:
+#   pip freeze > requirements.txt
+#
+# Until then, these are minimum versions known to work together.
+# Always prefer environment.yml for the full conda + pip install.
+# This file is for pip-only installs (e.g. CI environments without conda).
+
+vina
+meeko
+biopython>=1.81
+pandas>=2.0
+numpy>=1.24
+matplotlib>=3.7
+scikit-learn>=1.3
+tqdm>=4.65
+pytest>=7.4
+pytest-cov>=4.1
+
+# Dev tools
+black>=24.0
+ruff>=0.3
+mypy>=1.8
+
+# Phase 5 — uncomment when ready:
+# prolif>=2.0
+# plip>=2.3
